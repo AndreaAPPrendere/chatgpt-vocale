@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Assistente Vocale ChatGPT</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 2em; background: #f2f2f2; }
+    button { padding: 1em 2em; font-size: 1.2em; margin-top: 1em; }
+    #output { margin-top: 2em; font-size: 1.2em; max-width: 600px; margin-left: auto; margin-right: auto; }
+  </style>
+</head>
+<body>
+  <h1>Parla con l'Assistente AI</h1>
+  <button onclick="startListening()">🎙️ Parla</button>
+  <div id="output">Aspetto la tua domanda...</div>
+
+  <script>
+    const output = document.getElementById("output");
+
+    async function callChatGPT(prompt) {
+      const apiKey = "sk-proj-HjRjgDdV55Am2y_AtKjBvvit-l8ILY3eow9yno39BPfGAGmA8nAnL-LBEVM_fp5bwfiuwch8lGT3BlbkFJ9MSn8Kjy0Sw_0yb-7DLwcbAx4nm2NQ9hE8YC61mhB4AP6TYpBtF5YhPJtNYQAeXsh2dxpmA8";
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-3.5-turbo",
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+
+      const data = await response.json();
+      const message = data.choices[0].message.content;
+      output.textContent = message;
+      speak(message);
+    }
+
+    function speak(text) {
+      const synth = window.speechSynthesis;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'it-IT';
+      synth.speak(utterance);
+    }
+
+    function startListening() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = "it-IT";
+      recognition.start();
+
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        output.textContent = "Hai detto: " + transcript;
+        callChatGPT(transcript);
+      };
+
+      recognition.onerror = function(event) {
+        output.textContent = "Errore nel riconoscimento vocale: " + event.error;
+      };
+    }
+  </script>
+</body>
+</html>
